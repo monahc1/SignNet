@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignNet - Sign Language Recognition</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-sign-language"></i> SignNet</h1>
+            <h2>Real-Time Sign Language Recognition</h2>
+        </header>
+
+        <main>
+            <div class="video-container">
+                <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Video Feed">
+                <div class="camera-overlay">
+                    <div class="camera-frame"></div>
+                </div>
+            </div>
+
+            <div class="recognition-results">
+                <div class="result-box">
+                    <h3><i class="fas fa-font"></i> Letter Recognition</h3>
+                    <div id="static-result" class="result">Waiting...</div>
+                    <div class="confidence-bar-container">
+                        <div id="static-confidence" class="confidence-bar"></div>
+                    </div>
+                </div>
+                
+                <div class="result-box">
+                    <h3><i class="fas fa-comment-dots"></i> Word Recognition</h3>
+                    <div id="dynamic-result" class="result">Waiting...</div>
+                    <div class="confidence-bar-container">
+                        <div id="dynamic-confidence" class="confidence-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="start-btn" class="btn"><i class="fas fa-play"></i> Start</button>
+                <button id="stop-btn" class="btn"><i class="fas fa-stop"></i> Stop</button>
+                <button id="toggle-mode-btn" class="btn"><i class="fas fa-exchange-alt"></i> Toggle Mode</button>
+            </div>
+
+            <div class="history-panel">
+                <h3><i class="fas fa-history"></i> Recognition History</h3>
+                <ul id="recognition-history"></ul>
+            </div>
+        </main>
+
+        <footer>
+            <p>SignNet &copy; 2025 | <a href="#">Project Information</a></p>
+            <div class="team-info">
+                <p>Malih Assaad, Hussein Dakroub, Mona El Hajj Chehade</p>
+                <p>Supervisor: Dr. Youssef Bakouny</p>
+            </div>
+        </footer>
+    </div>
+
+    <div id="info-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>How to Use SignNet</h2>
+            <ol>
+                <li>Position your hand clearly in front of the camera</li>
+                <li>For alphabet signs: Hold your hand still in the correct position</li>
+                <li>For word signs: Perform the complete sign movement</li>
+                <li>The system will automatically detect whether you're performing a static or dynamic sign</li>
+            </ol>
+            <p>For best results, ensure good lighting and a clean background.</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
