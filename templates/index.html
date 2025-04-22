@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>SignNet - Sign Language Recognition</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -15,6 +15,7 @@
         </header>
 
         <main>
+            <!-- 🎥 Video feed section -->
             <div class="video-container">
                 <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Video Feed">
                 <div class="camera-overlay">
@@ -22,6 +23,7 @@
                 </div>
             </div>
 
+            <!-- 🧠 Recognition results -->
             <div class="recognition-results">
                 <div class="result-box">
                     <h3><i class="fas fa-font"></i> Letter Recognition</h3>
@@ -40,15 +42,27 @@
                 </div>
             </div>
 
+            <!-- 🎮 Controls -->
             <div class="controls">
                 <button id="start-btn" class="btn"><i class="fas fa-play"></i> Start</button>
                 <button id="stop-btn" class="btn"><i class="fas fa-stop"></i> Stop</button>
                 <button id="toggle-mode-btn" class="btn"><i class="fas fa-exchange-alt"></i> Toggle Mode</button>
             </div>
 
+            <!-- ⏳ Recognition History -->
             <div class="history-panel">
                 <h3><i class="fas fa-history"></i> Recognition History</h3>
                 <ul id="recognition-history"></ul>
+            </div>
+
+            <!-- 💬 GPT Chatbot -->
+            <div id="chatbox" class="result-box" style="margin-top: 30px;">
+                <h3><i class="fas fa-robot"></i> Ask SignNet</h3>
+                <div id="chat-log" style="height: 200px; overflow-y: auto; background: #f5f5f5; padding: 10px; border-radius: 10px;"></div>
+                <textarea id="chat-input"
+                          rows="2"
+                          placeholder="Ask SignNet anything..."
+                          style="width: 100%; padding: 10px; border-radius: 10px; font-size: 1rem; margin-top: 10px; resize: none;"></textarea>
             </div>
         </main>
 
@@ -61,6 +75,7 @@
         </footer>
     </div>
 
+    <!-- 📘 Help Modal -->
     <div id="info-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
