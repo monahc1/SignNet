@@ -1,5 +1,4 @@
-// static/js/script.js
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Elements
     const startBtn = document.getElementById('start-btn');
     const stopBtn = document.getElementById('stop-btn');
@@ -11,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const recognitionHistory = document.getElementById('recognition-history');
     const modal = document.getElementById('info-modal');
     const closeModal = document.querySelector('.close');
+    const chatInput = document.getElementById("chat-input");
+    const chatLog = document.getElementById("chat-log");
 
     // App state
     let isRunning = true;
@@ -25,19 +26,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Close modal
-    closeModal.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
+    closeModal.addEventListener('click', () => modal.style.display = 'none');
+    window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
 
-    // Click outside modal to close
-    window.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    // Start/Stop functionality
-    startBtn.addEventListener('click', function() {
+    // Start webcam stream
+    startBtn.addEventListener('click', () => {
         if (!isRunning) {
             const videoFeed = document.getElementById('video-feed');
             videoFeed.src = videoFeed.src;
@@ -47,7 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    stopBtn.addEventListener('click', function() {
+    // Stop webcam stream
+    stopBtn.addEventListener('click', () => {
         if (isRunning) {
             clearInterval(predictionInterval);
             isRunning = false;
@@ -56,99 +50,70 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Toggle recognition mode
-    toggleModeBtn.addEventListener('click', function() {
-        switch (currentMode) {
-            case 'auto':
-                currentMode = 'static';
-                toggleModeBtn.innerHTML = '<i class="fas fa-font"></i> Static Mode';
-                break;
-            case 'static':
-                currentMode = 'dynamic';
-                toggleModeBtn.innerHTML = '<i class="fas fa-comment-dots"></i> Dynamic Mode';
-                break;
-            case 'dynamic':
-                currentMode = 'auto';
-                toggleModeBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Auto Mode';
-                break;
-        }
+    toggleModeBtn.addEventListener('click', () => {
+        currentMode = currentMode === 'auto' ? 'static' : currentMode === 'static' ? 'dynamic' : 'auto';
+        toggleModeBtn.innerHTML =
+            currentMode === 'static' ? '<i class="fas fa-font"></i> Static Mode' :
+            currentMode === 'dynamic' ? '<i class="fas fa-comment-dots"></i> Dynamic Mode' :
+            '<i class="fas fa-exchange-alt"></i> Auto Mode';
 
         fetch(`/set_mode?mode=${currentMode}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Mode set:', data);
-            })
-            .catch(error => {
-                console.error('Error setting mode:', error);
-            });
+            .then(res => res.json())
+            .then(data => console.log('Mode set:', data))
+            .catch(err => console.error('Error setting mode:', err));
     });
 
-    function startPredictionFetching() {
-        predictionInterval = setInterval(fetchPrediction, 500);
-    }
-
+    // ⏱ Real-time prediction updates (updated function)
     function fetchPrediction() {
-        fetch('/get_prediction')
-            .then(response => response.json())
+        fetch("/get_prediction")
+            .then(res => res.json())
             .then(data => {
-                updatePredictionUI(data);
+                const { type, text, confidence } = data;
+
+                staticResult.classList.remove('active');
+                dynamicResult.classList.remove('active');
+
+                if (type === "static") {
+                    staticResult.innerText = text;
+                    staticConfidence.style.width = (confidence * 100).toFixed(0) + "%";
+                    staticResult.classList.add('active');
+                    dynamicResult.innerText = "Waiting...";
+                    dynamicConfidence.style.width = "0%";
+                    if (confidence > 0.7) addToHistory('Letter', text, confidence);
+                } else if (type === "dynamic") {
+                    dynamicResult.innerText = text;
+                    dynamicConfidence.style.width = (confidence * 100).toFixed(0) + "%";
+                    dynamicResult.classList.add('active');
+                    staticResult.innerText = "Waiting...";
+                    staticConfidence.style.width = "0%";
+                    if (confidence > 0.6) addToHistory('Word', text, confidence);
+                }
             })
             .catch(error => {
-                console.error('Error fetching prediction:', error);
+                console.error("Prediction fetch failed:", error);
             });
     }
 
-    function updatePredictionUI(prediction) {
-        staticResult.classList.remove('active');
-        dynamicResult.classList.remove('active');
-
-        if (prediction.type === 'static') {
-            staticResult.textContent = prediction.text;
-            staticConfidence.style.width = `${prediction.confidence * 100}%`;
-            staticResult.classList.add('active');
-            if (prediction.confidence > 0.7) {
-                addToHistory('Letter', prediction.text, prediction.confidence);
-            }
-        } else if (prediction.type === 'dynamic') {
-            dynamicResult.textContent = prediction.text;
-            dynamicConfidence.style.width = `${prediction.confidence * 100}%`;
-            dynamicResult.classList.add('active');
-            if (prediction.confidence > 0.6) {
-                addToHistory('Word', prediction.text, prediction.confidence);
-            }
-        }
+    function startPredictionFetching() {
+        predictionInterval = setInterval(fetchPrediction, 1000);
     }
 
     function addToHistory(type, text, confidence) {
         const now = new Date();
         const timeString = now.toLocaleTimeString();
+        const last = history[0];
 
-        const lastPrediction = history[0];
-        if (lastPrediction &&
-            lastPrediction.type === type &&
-            lastPrediction.text === text) {
-            return;
-        }
+        if (last && last.type === type && last.text === text) return;
 
-        history.unshift({
-            type,
-            text,
-            confidence,
-            time: timeString
-        });
-
-        if (history.length > 10) {
-            history.pop();
-        }
-
+        history.unshift({ type, text, confidence, time: timeString });
+        if (history.length > 10) history.pop();
         updateHistoryUI();
     }
 
     function updateHistoryUI() {
         recognitionHistory.innerHTML = '';
-
         history.forEach(item => {
             const li = document.createElement('li');
-
             const content = document.createElement('div');
             content.textContent = `${item.type}: ${item.text} (${(item.confidence * 100).toFixed(0)}%)`;
 
@@ -165,46 +130,61 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateUI() {
         startBtn.disabled = isRunning;
         stopBtn.disabled = !isRunning;
-
-        if (isRunning) {
-            startBtn.classList.add('disabled');
-            stopBtn.classList.remove('disabled');
-        } else {
-            startBtn.classList.remove('disabled');
-            stopBtn.classList.add('disabled');
-        }
+        startBtn.classList.toggle('disabled', isRunning);
+        stopBtn.classList.toggle('disabled', !isRunning);
     }
 
-    // Initialize the app
     function init() {
         updateUI();
         startPredictionFetching();
-
-        // Optional: sample history items for first load
-        addToHistory('Letter', 'A', 0.95);
-        addToHistory('Word', 'Hello', 0.87);
     }
 
     init();
 
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(event) {
+    // 🔥 Hotkeys
+    document.addEventListener('keydown', event => {
         if (event.code === 'Space') {
             event.preventDefault();
-            if (isRunning) {
-                stopBtn.click();
-            } else {
-                startBtn.click();
-            }
+            isRunning ? stopBtn.click() : startBtn.click();
         }
-
-        if (event.code === 'KeyM') {
-            toggleModeBtn.click();
-        }
-
+        if (event.code === 'KeyM') toggleModeBtn.click();
         if (event.code === 'KeyC') {
             history = [];
             updateHistoryUI();
         }
     });
+
+    // 💬 ChatGPT Integration
+    chatInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (message !== "") {
+                chatLog.innerHTML += `<p><strong>You:</strong> ${message}</p>`;
+                chatInput.value = "";
+
+                // Debugging log to verify the message being sent
+                console.log("Sending message: ", message);
+
+                // Send the message to the backend with the correct prompt
+                fetch("/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ message: message })  // Ensure the message is correctly formatted
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        const reply = data.reply.replace(/\n/g, "<br>");
+                        chatLog.innerHTML += `<p><strong>Bot:</strong> ${reply}</p>`;
+                        chatLog.scrollTop = chatLog.scrollHeight;
+                    })
+                    .catch(error => {
+                        chatLog.innerHTML += `<p><strong>Bot:</strong> ⚠️ Error: ${error.message}</p>`;
+                    });
+            }
+        }
+    });
+
 });
